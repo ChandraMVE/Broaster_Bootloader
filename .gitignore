@@ -1,0 +1,6 @@
+# ignore ALL .log files
+.metadata
+Broaster_Boootloader_RA4M2/Debug
+Simple_FW_Upgrade/Debug/
+Simple_FW_Upgrade/.*
+Broaster_Boootloader_RA4M2/.*
