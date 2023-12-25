@@ -206,6 +206,7 @@ int StartFwUpgrade(void)
 
 	for(uint16_t i = BOOTLOADER_PAGE; i < (TotalFWDataHexPage + BOOTLOADER_PAGE); i++)
 	{
+		usleep(100000);
 		if((i-BOOTLOADER_PAGE)*100/TotalFWDataHexPage > previous_progress)
 		{
 			printf("SIB Upgrade in Progress %ld%% \r\n",(i-BOOTLOADER_PAGE)*100/TotalFWDataHexPage);
@@ -275,7 +276,6 @@ int StartFwUpgrade(void)
 		{
 
 		}
-		
 		usleep(100000);
 	}
 	
