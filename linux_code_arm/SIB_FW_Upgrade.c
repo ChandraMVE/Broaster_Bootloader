@@ -275,6 +275,8 @@ int StartFwUpgrade(void)
 		{
 
 		}
+		
+		usleep(100000);
 	}
 	
 	printf("SIB Upgrade in Progress 100%% \r\n");
