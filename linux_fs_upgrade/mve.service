@@ -1,0 +1,92 @@
+#!/bin/bash
+# chkconfig: 5 20 80
+# description: Description comes here....
+
+secs=$((10))
+booting=$((25))
+while [ $secs -gt 0 ]; do
+   echo KB application Starts in "$secs"
+   sleep 1
+   secs=$((secs-1))
+done
+
+echo "########################"
+echo "AUTO RUN SCRIPT FOR KB"
+echo "########################"
+MVE_QT_LAUNCH="/opt/VTC3000QT_update.sh"
+MVE_QT_UPGRADE="/opt/copy_QT_Files.sh"
+MVE_SIB_UPGRADE="/opt/auto_SIB_Boot.sh"
+
+export DISPLAY=:0
+
+start()
+{
+
+    # code to start app QT Upgrade  
+    if [ -x $MVE_QT_UPGRADE ]; then
+       	$MVE_QT_UPGRADE start
+    fi
+
+    # code to start to SIB upgrade  
+    if [ -x $MVE_SIB_UPGRADE ]; then
+        $MVE_SIB_UPGRADE start
+    fi
+
+    sleep 5
+
+    # code to start app to boot  
+    if [ -x $MVE_SIB_UPGRADE ]; then
+        $MVE_SIB_UPGRADE start
+    fi
+    
+   while [ $booting -gt 0 ]; do
+   echo KB application Starts in "$booting"
+   sleep 1
+   booting=$((booting-1))
+   done
+
+    
+    # code to start app QT Launch  
+    if [ -x $MVE_QT_LAUNCH ]; then
+        $MVE_QT_LAUNCH start
+    fi
+}
+
+stop()
+{
+    # code to stop app comes here 
+    if [ -x $MVE_SIB_UPGRADE ]; then
+        $MVE_SIB_UPGRADE stop
+    fi	
+
+    # code to stop app comes here 
+    if [ -x $MVE_QT_UPGRADE ]; then
+        $MVE_QT_UPGRADE stop
+    fi	
+    # code to stop app comes here 
+    if [ -x $MVE_QT_LAUNCH ]; then
+        $MVE_QT_LAUNCH stop
+    fi
+}
+
+case "$1" in 
+    start)
+       start
+       ;;
+    stop)
+       stop
+       ;;
+    restart)
+       stop
+       sleep 5
+       start
+       ;;
+    status)
+       # code to check status of app comes here 
+       # example: status program_name
+       ;;
+    *)
+       echo "Usage: $0 {start|stop|status|restart}"
+esac
+
+exit 0 
