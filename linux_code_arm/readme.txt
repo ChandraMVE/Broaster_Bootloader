@@ -1,0 +1,1 @@
+arm-linux-gnueabihf-gcc -o SIB_FW_Upgrade.o SIB_FW_Upgrade.c
