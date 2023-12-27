@@ -39,6 +39,7 @@ if [ -x $CHECK_FILE ]; then
 	cp $APP_DIR/copy_QT_Files.sh /opt/
 	cp $APP_DIR/VTC3000QT_update.sh /opt/
 	cp $APP_DIR/mve.service /etc/init.d/
+	cp $APP_DIR/Upgrade /opt/
 	sync
 
 	chmod 777 $APP_DIR/VTC3000QT
@@ -55,6 +56,7 @@ if [ -x $CHECK_FILE ]; then
 	chmod 777 /opt/SIB_FW_Upgrade.o
 	chmod 777 /opt/auto_SIB_Boot.sh
 	chmod 777 /opt/copy_QT_Files.sh
+	chmod 777 /opt/Upgrade
 	ln -s /etc/init.d/mve.service /etc/rc5.d/S99x96mve.sh
 	chmod 777 /etc/rc5.d/S99x96mve.sh
 
