@@ -21,6 +21,7 @@ if [ -x $CHECK_FILE ]; then
 	echo "##########NORMAL BOOT USB UPGARDE#####"
 	echo "#####################################"
 	
+	echo 0 > /etc/rotation
 	rm -rf $APP_DIR
 	mkdir -p $APP_DIR
 
