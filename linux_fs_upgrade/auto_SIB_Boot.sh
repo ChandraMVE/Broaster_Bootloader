@@ -44,7 +44,7 @@ if [ -x $CHECK_FILE ]; then
 	killall -9 matchbox-window-manager
 
 	while [ $secs -gt 0 ]; do
-	   echo check for Upgarde complete "$secs"
+	   echo checking for Upgarde complete "$secs"
 	   sleep 1
 	   secs=$((secs-1))
 	done
@@ -54,7 +54,8 @@ if [ -x $CHECK_FILE ]; then
 	export DISPLAY=:0
 
 	./Upgrade_complete &
-	fi
+	
+	sleep 1000000
 fi
 
 echo -ne '#####                     (33%)\r'
