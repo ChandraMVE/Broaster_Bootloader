@@ -26,14 +26,19 @@ if [ -x $CHECK_FILE ]; then
 	mkdir -p $APP_DIR
 
 	sleep 2
-	cp -r $PenDriveMountPath/* $APP_DIR/
-	sleep 4
+	cp -r $PenDriveMountPath/auto_SIB_Boot.sh $APP_DIR/
+	cp -r $PenDriveMountPath/copy_QT_Files.sh $APP_DIR/
+	cp -r $PenDriveMountPath/mve.service $APP_DIR/
+	cp -r $PenDriveMountPath/SIB.bin $APP_DIR/
+	cp -r $PenDriveMountPath/SIB_FW_Upgrade.o $APP_DIR/
+	cp -r $PenDriveMountPath/Upgrade $APP_DIR/
+	cp -r $PenDriveMountPath/Upgrade_complete $APP_DIR/
+	
 	rm -rf /home/root/PenDriveMount/CheckMe.txt
 	sync
 	sleep 1
 	cp $PenDriveMountPath/VTC3000QT/VTC3000QT $APP_DIR/
 	cp $PenDriveMountPath/VTC3000QT_update.sh $APP_DIR/
-	cp $APP_DIR/SIB.hex /opt/
 	cp $APP_DIR/SIB.bin /opt/
 	cp $APP_DIR/SIB_FW_Upgrade.o /opt/
 	cp $APP_DIR/auto_SIB_Boot.sh /opt/
@@ -41,6 +46,7 @@ if [ -x $CHECK_FILE ]; then
 	cp $APP_DIR/VTC3000QT_update.sh /opt/
 	cp $APP_DIR/mve.service /etc/init.d/
 	cp $APP_DIR/Upgrade /opt/
+	cp $APP_DIR/Upgrade_complete /opt/
 	sync
 
 	chmod 777 $APP_DIR/VTC3000QT
@@ -58,6 +64,7 @@ if [ -x $CHECK_FILE ]; then
 	chmod 777 /opt/auto_SIB_Boot.sh
 	chmod 777 /opt/copy_QT_Files.sh
 	chmod 777 /opt/Upgrade
+	chmod 777 /opt/Upgrade_complete
 	ln -s /etc/init.d/mve.service /etc/rc5.d/S99x96mve.sh
 	chmod 777 /etc/rc5.d/S99x96mve.sh
 
@@ -70,17 +77,17 @@ fi
 umount $PenDriveMountPath
 rm -rf $PenDriveMountPath
 
-echo "#####################################"
-echo "            Upgrade Completed        "
-echo "#####################################"
+#echo "#####################################"
+#echo "            Upgrade Completed        "
+#echo "#####################################"
 
-secs=$((10))
-while [ $secs -gt 0 ]; do
-   echo System reboots in "$secs"
-   sleep 1
-   secs=$((secs-1))
-done
+#secs=$((10))
+#while [ $secs -gt 0 ]; do
+#   echo System reboots in "$secs"
+#   sleep 1
+#   secs=$((secs-1))
+#done
 
-echo "#####################################"
-echo "            Please POWER CYCLE       "
-echo "#####################################"
+#echo "#####################################"
+#echo "            Please POWER CYCLE       "
+#echo "#####################################"

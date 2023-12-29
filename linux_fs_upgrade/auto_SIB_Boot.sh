@@ -28,18 +28,33 @@ fi
 
 sleep 1
 
+secs=$((10))
 
 if [ -x $CHECK_FILE ]; then
 	echo "#####################################"
 	echo "########## REMOVE UPGRADE FILES #####"
 	echo "#####################################"
 	rm -rf /opt/SIB.bin
-	rm -rf /opt/SIB.hex
 	pkill Upgrade
 	echo "#####################################"
 	echo "#########POWER-OFF TRIGGERED#########"
 	echo "#####################################"
-	poweroff
+	
+	export DISPLAY=:0
+	killall -9 matchbox-window-manager
+
+	while [ $secs -gt 0 ]; do
+	   echo check for Upgarde complete "$secs"
+	   sleep 1
+	   secs=$((secs-1))
+	done
+
+	/usr/bin/Xorg &
+
+	export DISPLAY=:0
+
+	./Upgrade_complete &
+	fi
 fi
 
 echo -ne '#####                     (33%)\r'
