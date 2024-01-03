@@ -202,7 +202,7 @@ int StartFwUpgrade(void)
 		printf("Successfully Written Erase\n");
 	}
 	
-	usleep(1000000);
+	usleep(4000000);
 
 	for(uint16_t i = BOOTLOADER_PAGE; i < (TotalFWDataHexPage + BOOTLOADER_PAGE); i++)
 	{
