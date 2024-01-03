@@ -43,8 +43,8 @@
 #define CODE_PAGE_SIZE                      (128)
 #define MAX_CODE_PAGES                      (1792)          // 224k / 128 = 1792
 #define APPLICATION_START_ADDRESS           FLASH_HP_CF_BLOCK_8
-#define TOTAL_CODE_FLASH_BLOCK              (7)             // Application and code image use the same amount flash blocks
-#define TOTAL_CODE_FLASH_BYTES              (32*1024*7)
+#define TOTAL_CODE_FLASH_BLOCK              (10)             // Application and code image use the same amount flash blocks
+#define TOTAL_CODE_FLASH_BYTES              (32*1024*10)
 #define CODE_IMAGE_START_ADDRESS            FLASH_HP_CF_BLOCK_15
 
 //-------------------------------------------------------------------------------------------
