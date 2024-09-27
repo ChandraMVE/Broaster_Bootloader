@@ -40,6 +40,8 @@ FSP Configuration
     OFS0 register settings: WDT: Window Start Position: 100% (no window start position)
     OFS0 register settings: WDT: Reset Interrupt Request: Reset
     OFS0 register settings: WDT: Stop Control: Stop counting when entering Sleep mode
+    OFS1_SEL register settings: Voltage Detection 0 Level Security Attribution: VDSEL setting loads from OFS1_SEC
+    OFS1_SEL register settings: Voltage Detection 0 Circuit Start Security Attribution: LVDAS setting loads from OFS1_SEC
     OFS1 register settings: Voltage Detection 0 Circuit Start: Voltage monitor 0 reset is disabled after reset
     OFS1 register settings: Voltage Detection 0 Level: 2.80 V
     OFS1 register settings: HOCO Oscillation Enable: HOCO oscillation is disabled after reset
@@ -66,10 +68,10 @@ FSP Configuration
     Subclock Stabilization Time (ms): 1000
     
   Clocks
-    XTAL 12000000Hz
+    XTAL 24000000Hz
     HOCO 16MHz
     PLL Src: XTAL
-    PLL Div /1
+    PLL Div /2
     PLL Mul x16.5
     PLL2 Disabled
     PLL2 Div /2
@@ -268,6 +270,7 @@ FSP Configuration
     General: Num Thread Local Storage Pointers: 5
     General: Stack Depth Type: uint32_t
     General: Message Buffer Length Type: size_t
+    Memory Allocation: Clear Memory on Free: Disabled
     Memory Allocation: Support Static Allocation: Enabled
     Memory Allocation: Support Dynamic Allocation: Disabled
     Memory Allocation: Total Heap Size: 400
@@ -299,7 +302,6 @@ FSP Configuration
     Optional Functions: xTaskResumeFromISR() Function: Enabled
     RA: Hardware Stack Monitor: Disabled
     Logging: Print String Function: printf(x)
-    Logging: Logging Max Message Length: 192
     Logging: Logging Include Time and Task Name: Disabled
     
   HAL
@@ -421,7 +423,7 @@ FSP Configuration
       Data Format: Right Justified
       Output Amplifier: Disabled
       Charge Pump (Requires MOCO active): Disabled
-      Internal Output: Enabled by default
+      Internal Output: Not Supported
       ELC Trigger Source: Disabled
       
     Instance "g_rtc Realtime Clock (r_rtc)"
@@ -439,6 +441,7 @@ FSP Configuration
       
     Instance "g_timer_periodic1 Timer, Low-Power (r_agt)"
       General: Name: g_timer_periodic1
+      General: Counter Bit Width: AGT 16-bit
       General: Channel: 1
       General: Mode: Periodic
       General: Period: 1
@@ -457,6 +460,7 @@ FSP Configuration
       
     Instance "g_timer_periodic0 Timer, Low-Power (r_agt)"
       General: Name: g_timer_periodic0
+      General: Counter Bit Width: AGT 16-bit
       General: Channel: 0
       General: Mode: Periodic
       General: Period: 32768
@@ -480,15 +484,15 @@ FSP Configuration
       Destination Address Mode: Fixed
       Source Address Mode: Incremented
       Repeat Area (Unused in Normal Mode): Source
-      Destination Pointer: NULL
-      Source Pointer: NULL
       Interrupt Frequency: After all transfers have completed
       Number of Transfers: 0
       Number of Blocks (Valid only in Block Mode): 0
+      Number of Transfer Descriptors: 1
       Activation Source: AGT2 INT (AGT interrupt)
       
     Instance "g_timer0 Timer, Low-Power (r_agt)"
       General: Name: g_timer0
+      General: Counter Bit Width: AGT 16-bit
       General: Channel: 2
       General: Mode: Periodic
       General: Period: 0x10000

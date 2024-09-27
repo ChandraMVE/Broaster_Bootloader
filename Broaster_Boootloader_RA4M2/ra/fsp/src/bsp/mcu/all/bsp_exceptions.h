@@ -20,8 +20,8 @@
 
 /** @} (end addtogroup BSP_MCU) */
 
-#ifndef BSP_ARM_EXCEPTIONS_H
- #define BSP_ARM_EXCEPTIONS_H
+#ifndef BSP_EXCEPTIONS_H
+ #define BSP_EXCEPTIONS_H
 
  #ifdef __cplusplus
 extern "C" {

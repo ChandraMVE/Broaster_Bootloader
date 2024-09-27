@@ -1,6 +1,10 @@
 /* generated pin source file - do not edit */
 #include "bsp_api.h"
-#include "r_ioport_api.h"
+#if __has_include("r_ioport.h")
+#include "r_ioport.h"
+#elif __has_include("r_ioport_b.h")
+#include "r_ioport_b.h"
+#endif
 
 const ioport_pin_cfg_t g_bsp_pin_cfg_data[] =
         {
@@ -26,6 +30,7 @@ const ioport_pin_cfg_t g_bsp_pin_cfg_data[] =
 const ioport_cfg_t g_bsp_pin_cfg =
 { .number_of_pins = sizeof(g_bsp_pin_cfg_data) / sizeof(ioport_pin_cfg_t), .p_pin_cfg_data = &g_bsp_pin_cfg_data[0], };
 
+#if __has_include("r_ioport.h")
 #if BSP_TZ_SECURE_BUILD
 
 void R_BSP_PinCfgSecurityInit(void);
@@ -59,4 +64,5 @@ void R_BSP_PinCfgSecurityInit(void)
     }
 
 }
+#endif
 #endif

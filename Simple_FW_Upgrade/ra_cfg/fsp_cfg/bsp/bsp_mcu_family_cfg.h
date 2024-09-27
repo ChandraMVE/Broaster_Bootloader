@@ -310,7 +310,7 @@ extern "C" {
 /* Option Function Select Register 1 Security Attribution */
 #ifndef BSP_CFG_ROM_REG_OFS1_SEL
 #if defined(_RA_TZ_SECURE) || defined(_RA_TZ_NONSECURE)
-            #define BSP_CFG_ROM_REG_OFS1_SEL (0xFFFFF8F8U | ((BSP_CFG_CLOCKS_SECURE == 0) ? 0x700U : 0U) | ((RA_NOT_DEFINED > 0) ? 0U : 0x7U))
+            #define BSP_CFG_ROM_REG_OFS1_SEL (0xFFFFF8F8U | ((0U << 0U)) | ((0U << 2U)) | ((BSP_CFG_CLOCKS_SECURE == 0) ? 0x700U : 0U))
 #else
 #define BSP_CFG_ROM_REG_OFS1_SEL (0xFFFFF8F8U)
 #endif

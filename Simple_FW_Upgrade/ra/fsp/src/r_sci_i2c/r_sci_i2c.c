@@ -192,14 +192,15 @@ i2c_master_api_t const g_i2c_master_on_sci =
 /******************************************************************************************************************//**
  * Opens the I2C device.
  *
- * @retval  FSP_SUCCESS               Requested clock rate was set exactly.
- * @retval  FSP_ERR_ALREADY_OPEN      Module is already open.
- * @retval  FSP_ERR_ASSERTION         Parameter check failure due to one or more reasons below:
- *                                    1. p_api_ctrl or p_cfg is NULL.
- *                                    2. extended parameter is NULL.
- *                                    3. Callback parameter is NULL.
- *                                    4. Clock rate requested is greater than 400KHz
- *                                    5. Invalid IRQ number assigned
+ * @retval  FSP_SUCCESS                       Requested clock rate was set exactly.
+ * @retval  FSP_ERR_ALREADY_OPEN              Module is already open.
+ * @retval  FSP_ERR_IP_CHANNEL_NOT_PRESENT    Channel is not available on this MCU.
+ * @retval  FSP_ERR_ASSERTION                 Parameter check failure due to one or more reasons below:
+ *                                            1. p_api_ctrl or p_cfg is NULL.
+ *                                            2. extended parameter is NULL.
+ *                                            3. Callback parameter is NULL.
+ *                                            4. Clock rate requested is greater than 400KHz
+ *                                            5. Invalid IRQ number assigned
  **********************************************************************************************************************/
 fsp_err_t R_SCI_I2C_Open (i2c_master_ctrl_t * const p_api_ctrl, i2c_master_cfg_t const * const p_cfg)
 {
@@ -212,6 +213,8 @@ fsp_err_t R_SCI_I2C_Open (i2c_master_ctrl_t * const p_api_ctrl, i2c_master_cfg_t
     FSP_ASSERT(p_cfg->txi_irq >= (IRQn_Type) 0);
     FSP_ASSERT(p_cfg->tei_irq >= (IRQn_Type) 0);
     FSP_ERROR_RETURN(SCI_I2C_OPEN != p_ctrl->open, FSP_ERR_ALREADY_OPEN);
+    FSP_ERROR_RETURN((p_cfg->channel < 8 * sizeof(unsigned int)) && (BSP_FEATURE_SCI_CHANNELS & (1U << p_cfg->channel)),
+                     FSP_ERR_IP_CHANNEL_NOT_PRESENT);
     sci_i2c_extended_cfg_t * pextend = (sci_i2c_extended_cfg_t *) p_cfg->p_extend;
     if (true == pextend->clock_settings.bitrate_modulation)
     {
@@ -831,15 +834,14 @@ static void sci_i2c_run_hw_master (sci_i2c_instance_ctrl_t * const p_ctrl)
 void sci_i2c_rxi_isr (void)
 {
     /* Save context if RTOS is used */
-    FSP_CONTEXT_SAVE;
-
+    FSP_CONTEXT_SAVE
     /* This interrupt is invoked once DTC supported Read transfer is completed. Nothing to be done here. */
 
     /* Clear pending IRQ */
     R_BSP_IrqStatusClear(R_FSP_CurrentIrqGet());
 
     /* Restore context if RTOS is used */
-    FSP_CONTEXT_RESTORE;
+    FSP_CONTEXT_RESTORE
 }
 
 #endif
@@ -851,8 +853,7 @@ void sci_i2c_rxi_isr (void)
 void sci_i2c_txi_isr (void)
 {
     /* Save context if RTOS is used */
-    FSP_CONTEXT_SAVE;
-
+    FSP_CONTEXT_SAVE
     /* Clear pending IRQ */
     R_BSP_IrqStatusClear(R_FSP_CurrentIrqGet());
 
@@ -863,7 +864,7 @@ void sci_i2c_txi_isr (void)
     sci_i2c_txi_handler(p_ctrl);
 
     /* Restore context if RTOS is used */
-    FSP_CONTEXT_RESTORE;
+    FSP_CONTEXT_RESTORE
 }
 
 /******************************************************************************************************************//**
@@ -873,7 +874,7 @@ void sci_i2c_txi_isr (void)
 void sci_i2c_tei_isr (void)
 {
     /* Save context if RTOS is used */
-    FSP_CONTEXT_SAVE;
+    FSP_CONTEXT_SAVE
 
     IRQn_Type                 irq    = R_FSP_CurrentIrqGet();
     sci_i2c_instance_ctrl_t * p_ctrl = (sci_i2c_instance_ctrl_t *) R_FSP_IsrContextGet(irq);
@@ -885,7 +886,7 @@ void sci_i2c_tei_isr (void)
     R_BSP_IrqStatusClear(R_FSP_CurrentIrqGet());
 
     /* Restore context if RTOS is used */
-    FSP_CONTEXT_RESTORE;
+    FSP_CONTEXT_RESTORE
 }
 
 /******************************************************************************************************************//**

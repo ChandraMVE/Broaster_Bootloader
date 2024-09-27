@@ -110,6 +110,9 @@ FSP_HEADER
 #ifndef configMESSAGE_BUFFER_LENGTH_TYPE
 #define configMESSAGE_BUFFER_LENGTH_TYPE size_t
 #endif
+#ifndef configHEAP_CLEAR_MEMORY_ON_FREE
+#define configHEAP_CLEAR_MEMORY_ON_FREE  0
+#endif
 #ifndef configSUPPORT_STATIC_ALLOCATION
 #define configSUPPORT_STATIC_ALLOCATION (1)
 #endif
@@ -127,6 +130,9 @@ FSP_HEADER
 #endif
 #ifndef configUSE_CO_ROUTINES
 #define configUSE_CO_ROUTINES (0)
+#endif
+#ifndef configMAX_CO_ROUTINE_PRIORITIES
+#define configMAX_CO_ROUTINE_PRIORITIES  (2)
 #endif
 #ifndef configUSE_TIMERS
 #define configUSE_TIMERS (1)
@@ -217,9 +223,6 @@ FSP_HEADER
 #endif
 #ifndef configLOGGING_INCLUDE_TIME_AND_TASK_NAME
 #define configLOGGING_INCLUDE_TIME_AND_TASK_NAME   (0)
-#endif
-#ifndef configLOGGING_MAX_MESSAGE_LENGTH
-#define configLOGGING_MAX_MESSAGE_LENGTH           (192)
 #endif
 
 /* Common macro for FSP header files. There is also a corresponding FSP_HEADER macro at the top of this file. */

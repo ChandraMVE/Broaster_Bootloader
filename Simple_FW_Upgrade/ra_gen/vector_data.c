@@ -2,6 +2,7 @@
 #include "bsp_api.h"
 /* Do not build these data structures if no interrupts are currently allocated because IAR will have build errors. */
 #if VECTOR_DATA_IRQ_COUNT > 0
+        #if __has_include("r_ioport.h")
         BSP_DONT_REMOVE const fsp_vector_t g_vector_table[BSP_ICU_VECTOR_MAX_ENTRIES] BSP_PLACE_IN_SECTION(BSP_SECTION_APPLICATION_VECTORS) =
         {
                         [0] = sci_uart_rxi_isr, /* SCI0 RXI (Receive data full) */
@@ -50,4 +51,30 @@
             [19] = BSP_PRV_IELS_ENUM(EVENT_FCU_FRDYI), /* FCU FRDYI (Flash ready interrupt) */
             [20] = BSP_PRV_IELS_ENUM(EVENT_FCU_FIFERR), /* FCU FIFERR (Flash access error interrupt) */
         };
+        #elif __has_include("r_ioport_b.h")
+        BSP_DONT_REMOVE const fsp_vector_t g_vector_table[BSP_IRQ_VECTOR_MAX_ENTRIES] BSP_PLACE_IN_SECTION(BSP_SECTION_APPLICATION_VECTORS) =
+        {
+            [BSP_PRV_IELS_ENUM(SCI0_RXI)] = sci_uart_rxi_isr, /* SCI0 RXI (Receive data full) */
+            [BSP_PRV_IELS_ENUM(SCI0_TXI)] = sci_uart_txi_isr, /* SCI0 TXI (Transmit data empty) */
+            [BSP_PRV_IELS_ENUM(SCI0_TEI)] = sci_uart_tei_isr, /* SCI0 TEI (Transmit end) */
+            [BSP_PRV_IELS_ENUM(SCI0_ERI)] = sci_uart_eri_isr, /* SCI0 ERI (Receive error) */
+            [BSP_PRV_IELS_ENUM(SCI4_TXI)] = sci_i2c_txi_isr, /* SCI4 TXI (Transmit data empty) */
+            [BSP_PRV_IELS_ENUM(SCI4_TEI)] = sci_i2c_tei_isr, /* SCI4 TEI (Transmit end) */
+            [BSP_PRV_IELS_ENUM(SCI2_RXI)] = sci_uart_rxi_isr, /* SCI2 RXI (Received data full) */
+            [BSP_PRV_IELS_ENUM(SCI2_TXI)] = sci_uart_txi_isr, /* SCI2 TXI (Transmit data empty) */
+            [BSP_PRV_IELS_ENUM(SCI2_TEI)] = sci_uart_tei_isr, /* SCI2 TEI (Transmit end) */
+            [BSP_PRV_IELS_ENUM(SCI2_ERI)] = sci_uart_eri_isr, /* SCI2 ERI (Receive error) */
+            [BSP_PRV_IELS_ENUM(ADC0_SCAN_END)] = adc_scan_end_isr, /* ADC0 SCAN END (A/D scan end interrupt) */
+            [BSP_PRV_IELS_ENUM(ADC0_SCAN_END_B)] = adc_scan_end_b_isr, /* ADC0 SCAN END B (A/D scan end interrupt for group B) */
+            [BSP_PRV_IELS_ENUM(ADC0_WINDOW_A)] = adc_window_compare_isr, /* ADC0 WINDOW A (Window A Compare match) */
+            [BSP_PRV_IELS_ENUM(RTC_ALARM)] = rtc_alarm_periodic_isr, /* RTC ALARM (Alarm interrupt) */
+            [BSP_PRV_IELS_ENUM(RTC_PERIOD)] = rtc_alarm_periodic_isr, /* RTC PERIOD (Periodic interrupt) */
+            [BSP_PRV_IELS_ENUM(RTC_CARRY)] = rtc_carry_isr, /* RTC CARRY (Carry interrupt) */
+            [BSP_PRV_IELS_ENUM(AGT1_INT)] = agt_int_isr, /* AGT1 INT (AGT interrupt) */
+            [BSP_PRV_IELS_ENUM(AGT0_INT)] = agt_int_isr, /* AGT0 INT (AGT interrupt) */
+            [BSP_PRV_IELS_ENUM(AGT2_INT)] = agt_int_isr, /* AGT2 INT (AGT interrupt) */
+            [BSP_PRV_IELS_ENUM(FCU_FRDYI)] = fcu_frdyi_isr, /* FCU FRDYI (Flash ready interrupt) */
+            [BSP_PRV_IELS_ENUM(FCU_FIFERR)] = fcu_fiferr_isr, /* FCU FIFERR (Flash access error interrupt) */
+        };
+        #endif
         #endif

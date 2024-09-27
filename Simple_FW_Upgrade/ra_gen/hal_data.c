@@ -46,7 +46,8 @@ const agt_extended_cfg_t g_timer0_extend =
   .measurement_mode = AGT_MEASURE_DISABLED,
   .agtio_filter = AGT_AGTIO_FILTER_NONE,
   .enable_pin = AGT_ENABLE_PIN_NOT_USED,
-  .trigger_edge = AGT_TRIGGER_EDGE_RISING, };
+  .trigger_edge = AGT_TRIGGER_EDGE_RISING,
+  .counter_bit_width = AGT_COUNTER_BIT_WIDTH_16, };
 const timer_cfg_t g_timer0_cfg =
 { .mode = TIMER_MODE_PERIODIC,
 /* Actual period: 0.001323959595959596 seconds. Actual duty: 50%. */.period_counts = (uint32_t) 0x10000,
@@ -70,6 +71,7 @@ const timer_instance_t g_timer0 =
 { .p_ctrl = &g_timer0_ctrl, .p_cfg = &g_timer0_cfg, .p_api = &g_timer_on_agt };
 dtc_instance_ctrl_t g_transfer0_ctrl;
 
+#if (1 == 1)
 transfer_info_t g_transfer0_info =
 { .transfer_settings_word_b.dest_addr_mode = TRANSFER_ADDR_MODE_FIXED,
   .transfer_settings_word_b.repeat_area = TRANSFER_REPEAT_AREA_SOURCE,
@@ -83,10 +85,26 @@ transfer_info_t g_transfer0_info =
   .num_blocks = 0,
   .length = 0, };
 
+#elif (1 > 1)
+/* User is responsible to initialize the array. */
+transfer_info_t g_transfer0_info[1];
+#else
+/* User must call api::reconfigure before enable DTC transfer. */
+#endif
+
 const dtc_extended_cfg_t g_transfer0_cfg_extend =
 { .activation_source = VECTOR_NUMBER_AGT2_INT, };
+
 const transfer_cfg_t g_transfer0_cfg =
-{ .p_info = &g_transfer0_info, .p_extend = &g_transfer0_cfg_extend, };
+{
+#if (1 == 1)
+  .p_info = &g_transfer0_info,
+#elif (1 > 1)
+    .p_info              = g_transfer0_info,
+#else
+    .p_info = NULL,
+#endif
+  .p_extend = &g_transfer0_cfg_extend, };
 
 /* Instance structure to use this module. */
 const transfer_instance_t g_transfer0 =
@@ -100,7 +118,8 @@ const agt_extended_cfg_t g_timer_periodic0_extend =
   .measurement_mode = AGT_MEASURE_DISABLED,
   .agtio_filter = AGT_AGTIO_FILTER_NONE,
   .enable_pin = AGT_ENABLE_PIN_NOT_USED,
-  .trigger_edge = AGT_TRIGGER_EDGE_RISING, };
+  .trigger_edge = AGT_TRIGGER_EDGE_RISING,
+  .counter_bit_width = AGT_COUNTER_BIT_WIDTH_16, };
 const timer_cfg_t g_timer_periodic0_cfg =
 { .mode = TIMER_MODE_PERIODIC,
 /* Actual period: 1 seconds. Actual duty: 50%. */.period_counts = (uint32_t) 0x8000,
@@ -132,7 +151,8 @@ const agt_extended_cfg_t g_timer_periodic1_extend =
   .measurement_mode = AGT_MEASURE_DISABLED,
   .agtio_filter = AGT_AGTIO_FILTER_NONE,
   .enable_pin = AGT_ENABLE_PIN_NOT_USED,
-  .trigger_edge = AGT_TRIGGER_EDGE_RISING, };
+  .trigger_edge = AGT_TRIGGER_EDGE_RISING,
+  .counter_bit_width = AGT_COUNTER_BIT_WIDTH_16, };
 const timer_cfg_t g_timer_periodic1_cfg =
 { .mode = TIMER_MODE_PERIODIC,
 /* Actual period: 0.001 seconds. Actual duty: 50%. */.period_counts = (uint32_t) 0xc15c,
@@ -162,9 +182,9 @@ const rtc_error_adjustment_cfg_t g_rtc_err_cfg =
   .adjustment_type = RTC_ERROR_ADJUSTMENT_NONE,
   .adjustment_value = 0, };
 const rtc_cfg_t g_rtc_cfg =
-{ .clock_source = RTC_CLOCK_SOURCE_SUBCLK, .freq_compare_value_loco = 255, .p_err_cfg = &g_rtc_err_cfg, .p_callback =
+{ .clock_source = RTC_CLOCK_SOURCE_SUBCLK, .freq_compare_value = 255, .p_err_cfg = &g_rtc_err_cfg, .p_callback =
           rtc_callback,
-  .p_context = NULL, .alarm_ipl = (12), .periodic_ipl = (12), .carry_ipl = (12),
+  .p_context = NULL, .p_extend = NULL, .alarm_ipl = (12), .periodic_ipl = (12), .carry_ipl = (12),
 #if defined(VECTOR_NUMBER_RTC_ALARM)
     .alarm_irq               = VECTOR_NUMBER_RTC_ALARM,
 #else
