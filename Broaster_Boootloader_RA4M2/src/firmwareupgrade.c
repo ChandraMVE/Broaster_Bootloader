@@ -140,6 +140,8 @@ void CopySckToUpgradePayloadPkt(uint8_t *dataBufferPtr)
     memcpy(packet.dataBuf, dataBufferPtr, 130);
 }
 
+bool checkbeat = false;
+
 void FirmwareUpgrade(void)
 {
     fsp_err_t err;
@@ -225,6 +227,10 @@ void FirmwareUpgrade(void)
 #endif
         jumpToApp = true;
 
+    }
+    else if(page == FIRMWARE_UPGRADE_HEART_BEAT)
+    {
+        checkbeat = true;
     }
     else
     {   // Something is wrong! We need send error state

@@ -27,6 +27,7 @@
 #include "SEGGER_RTT/SEGGER_RTT.H"
 
 extern bool jumpToApp;
+extern bool checkbeat;
 bool uart0_TX_ENABLE = 0;
 
 void uart0TxInterrupt(void);
@@ -218,8 +219,13 @@ void uart0TxInterrupt(void)
     {
        uint8_t tx_buffer = (uint8_t)(uart0.txBuf[uart0.txOut] & 0xFF);
 
-       R_SCI_UART_Write (&g_uart0_ctrl, &tx_buffer, 1);
+       //We want to make sure Serial communication is working, So we will send
+       //16 bit Magic number 0xDEAD
 
+       uint8_t tx_buffer_Magic[2] = {0xDE, 0xAD};
+
+//       R_SCI_UART_Write (&g_uart0_ctrl, tx_buffer_Magic, 2);
+       R_SCI_UART_Write (&g_uart0_ctrl, &tx_buffer, 1);
        APP_PRINT("0x%02x ", tx_buffer);
 
        if (++uart0.txOut >= uart0_TX_BUF_SIZE)

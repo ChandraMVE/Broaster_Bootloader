@@ -13,6 +13,7 @@
 // It will initial firmware upgrade and erase code image when receives this page number
 #define FIRMWARE_UPGRADE_START_PAGE         0xfffe
 
+#define FIRMWARE_UPGRADE_HEART_BEAT         0xfffd
 // It will verify the total page received and CRC check after receive this page number.
 // If everything is ok, it will change the boot state to copy image and reboot the MCU.
 #define FIRMWARE_UPGRADE_END_PAGE           0xffff
