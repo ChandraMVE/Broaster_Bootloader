@@ -1,0 +1,17 @@
+;OID TYPE OFFSET COUNT VALUES
+; ____________________________
+1108 0 0 4 50 3 3 5 				;Prop Band
+1109 0 0 1 40 					;Recovery PB
+1111 0 0 4 27 16 16 2 				; Cycle Time
+1112 0 0 4 4 7 7 19   				;MIN On Time
+1113 0 0 4 18 2 2 190 				; MIN OFF  reads back -66
+1114 0 0 1 150   				;Melt Temp Limit  reads back -106
+1115 0 0 1 20  					;Melt off Time
+1116 0 0 1 15  					; Melt on Time
+1106 1 0 2 0 2 					;probe offset
+1117 0 0 1 0  					;Cook Constant Power
+1118 0 0 1 0  					;Idle Constant Power
+1322 0 0 1 2  					;Number of Slope Samples
+1324 0 0 1 5  					;Slope Delay
+1312 1 0 2 -50 -20  				;ALT settemp  -20 -20
+;End of file
