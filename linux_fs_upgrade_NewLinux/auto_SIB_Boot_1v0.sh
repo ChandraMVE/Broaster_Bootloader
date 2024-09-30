@@ -10,20 +10,34 @@ if [ -x $CHECK_FILE ]; then
 	./Upgrade &
 fi
 
-./SIB_FW_Upgrade.o
+./SIB_FW_Upgrade.o $bytes $snr $modulation $channel $alamouti
+value=$?
 
 sleep 1
 
-if [ -x $CHECK_FILE ]; then
-	echo "#####################################"
-	echo "########## REMOVE UPGRADE FILES #####"
-	echo "#####################################"
-	rm -rf /opt/SIB.bin
-	kill -9 $(pidof Upgrade)
-	
-
-	export QT_QPA_PLATFORM=linuxfb:fb=/dev/fb0:size=1024x600:mmSize=1024x600
-	./Upgrade_complete &	
-	sleep 100000000
-	wait
+if [ $value == 1 ]
+then
+	if [ -x $CHECK_FILE ]; then
+		echo "#####################################"
+		echo "########## Upgrade Failed ###########"
+		echo "#####################################"
+		kill -9 $(pidof Upgrade)
+		sleep 1
+		export QT_QPA_PLATFORM=linuxfb:fb=/dev/fb0:size=1024x600:mmSize=1024x600
+		./Upgrade_failed &
+		sleep 100000000
+	fi
+else
+	if [ -x $CHECK_FILE ]; then
+		echo "#####################################"
+		echo "########## Upgrade Completed ## #####"
+		echo "#####################################"
+		rm -rf /opt/SIB.bin
+		kill -9 $(pidof Upgrade)
+		sleep 1
+		export QT_QPA_PLATFORM=linuxfb:fb=/dev/fb0:size=1024x600:mmSize=1024x600
+		./Upgrade_complete &
+		sleep 100000000
+		wait
+	fi
 fi
