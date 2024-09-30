@@ -17,16 +17,14 @@ sleep 1
 
 if [ $value == 1 ]
 then
-	if [ -x $CHECK_FILE ]; then
-		echo "#####################################"
-		echo "########## Upgrade Failed ###########"
-		echo "#####################################"
-		kill -9 $(pidof Upgrade)
-		sleep 1
-		export QT_QPA_PLATFORM=linuxfb:fb=/dev/fb0:size=1024x600:mmSize=1024x600
-		./Upgrade_failed &
-		sleep 100000000
-	fi
+	echo "#####################################"
+	echo "########## Upgrade Failed ###########"
+	echo "#####################################"
+	kill -9 $(pidof Upgrade)
+	sleep 1
+	export QT_QPA_PLATFORM=linuxfb:fb=/dev/fb0:size=1024x600:mmSize=1024x600
+	./Upgrade_failed &
+	sleep 100000000
 else
 	if [ -x $CHECK_FILE ]; then
 		echo "#####################################"
