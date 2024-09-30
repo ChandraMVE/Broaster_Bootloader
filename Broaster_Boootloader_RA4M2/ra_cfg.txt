@@ -68,10 +68,10 @@ FSP Configuration
     Subclock Stabilization Time (ms): 1000
     
   Clocks
-    XTAL 24000000Hz
+    XTAL 12000000Hz
     HOCO 20MHz
     PLL Src: XTAL
-    PLL Div /2
+    PLL Div /1
     PLL Mul x16.5
     PLL2 Disabled
     PLL2 Div /2
