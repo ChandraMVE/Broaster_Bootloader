@@ -31,6 +31,7 @@ if [ -b $usbdev ];then
 			cp -r $PenDriveMountPath/S21BootProgress $APP_DIR/
 			cp -r $PenDriveMountPath/Upgrade_complete $APP_DIR/
 			cp -r $PenDriveMountPath/Upgrade_failed $APP_DIR/
+			cp -r $PenDriveMountPath/lnx_Upgrade_critical $APP_DIR/			
 			chmod 777 /opt/copy_QT_Files_1v0.sh
 			cp $APP_DIR/copy_QT_Files_1v0.sh /opt/
 			cp $APP_DIR/S21BootProgress /etc/init.d/
@@ -47,9 +48,10 @@ if [ -b $usbdev ];then
 			echo "#####################################"
 			chmod 755 $APP_DIR/Upgrade_complete
 			chmod 755 $APP_DIR/Upgrade_failed
+			chmod 755 $APP_DIR/lnx_Upgrade_critical
 			cd $APP_DIR
 			export QT_QPA_PLATFORM=linuxfb:fb=/dev/fb0:size=1024x600:mmSize=1024x600
-	       	 	./Upgrade_complete &
+	       	 	./lnx_Upgrade_critical &
 			sleep 100000000
 			wait
 		fi
@@ -63,6 +65,7 @@ if [ -b $usbdev ];then
 		cp -r $PenDriveMountPath/Upgrade $APP_DIR/
 		cp -r $PenDriveMountPath/Upgrade_complete $APP_DIR/
 		cp -r $PenDriveMountPath/Upgrade_failed $APP_DIR/
+		cp -r $PenDriveMountPath/lnx_Upgrade_critical $APP_DIR/
 		cp $PenDriveMountPath/VTC3000QT_update.sh $APP_DIR/
 	
 		rm -rf $PenDriveMountPath/CheckMe.txt
@@ -77,6 +80,7 @@ if [ -b $usbdev ];then
 		cp $APP_DIR/Upgrade /opt/
 		cp $APP_DIR/Upgrade_complete /opt/
 		cp $APP_DIR/Upgrade_failed /opt/
+		cp $APP_DIR/lnx_Upgrade_critical /opt/
 		sync
 
 		chmod 777 $APP_DIR/VTC3000QT
@@ -94,6 +98,7 @@ if [ -b $usbdev ];then
 		chmod 777 /opt/Upgrade
 		chmod 777 /opt/Upgrade_complete
 		chmod 777 /opt/Upgrade_failed
+		chmod 777 /opt/lnx_Upgrade_critical
 	else
 		umount $PenDriveMountPath
 		rm -rf $PenDriveMountPath

@@ -20,7 +20,9 @@ then
 	echo "#####################################"
 	echo "########## Upgrade Failed ###########"
 	echo "#####################################"
-	kill -9 $(pidof Upgrade)
+	if [ -x $CHECK_FILE ]; then
+		kill -9 $(pidof Upgrade)
+	fi
 	sleep 1
 	export QT_QPA_PLATFORM=linuxfb:fb=/dev/fb0:size=1024x600:mmSize=1024x600
 	./Upgrade_failed &

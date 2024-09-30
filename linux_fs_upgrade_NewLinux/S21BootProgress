@@ -18,9 +18,9 @@ case "$1" in
     	fi
 
     	# code to start app to boot  
-    	if [ -x $MVE_SIB_UPGRADE ]; then
-        	$MVE_SIB_UPGRADE start
-    	fi  	
+#    	if [ -x $MVE_SIB_UPGRADE ]; then
+#        	$MVE_SIB_UPGRADE start
+#    	fi  	
   	;;
   stop)
   	echo KB BootProgress Check stop : OK
