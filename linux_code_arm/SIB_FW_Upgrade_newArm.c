@@ -12,15 +12,24 @@
 #include <string.h>
 #include <errno.h>
 
+#include <poll.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/select.h>
+
 typedef int usb_fd;
 static usb_fd gUsbHostFd_t;
 
 #define CDCACM_USB_FD  0x01
 #define USB_HOST    1 
+#define KB_ARM_COMPILE //To enable for ARM KB build
+//#define HEARTBEAT_ENABLE  // To Enable heartbeat
 
 int cdcacm_Init(void);
 int write_port(int , uint8_t * , size_t );
 ssize_t read_port(int , uint8_t * , size_t );
+ssize_t read_port_timeout(int brddesc, uint8_t * buffer, size_t size, int ms_timeout);
 int initUSBSerial(usb_fd *, int );
 int StartFwUpgrade(void);
 
@@ -34,11 +43,21 @@ int64_t millis()
 
 int main(void)
 {
-	cdcacm_Init();
-	StartFwUpgrade();	
+	int ret = 0;
+	ret = cdcacm_Init();
+	if (ret)
+	{
+		return 1;
+	}
+	ret = StartFwUpgrade();
+	if (ret)
+	{
+		printf("FAILED!!!!\n");
+		return 1;
+	}	
 	tcflush(gUsbHostFd_t,TCIOFLUSH);
 	close(gUsbHostFd_t);
-	return 0;
+	return ret;
 }
 
 /***************************************************************************************************
@@ -55,7 +74,7 @@ int cdcacm_Init(void)
 	/***********************************************************************************************
 	 * Connect to Red/Black using RB Interface - Handshake
 	 * *********************************************************************************************/
-	return 0;
+	return ret;
 }
 
 /***************************************************************************************************
@@ -71,8 +90,11 @@ int initUSBSerial(usb_fd *aUsbFd, int hostordev)
   	if(hostordev == USB_HOST)
   	{
   		// Open the serial port. Change device path as needed (currently set to an standard FTDI USB-UART cable type device)
+#ifdef KB_ARM_COMPILE
   		*aUsbFd = open("/dev/ttymxc4", O_RDWR);
-
+#else
+  		*aUsbFd = open("/dev/ttyUSB0", O_RDWR);
+#endif
   	}
 
   	if(*aUsbFd > 0)
@@ -135,35 +157,88 @@ int initUSBSerial(usb_fd *aUsbFd, int hostordev)
 int StartFwUpgrade(void)
 {
 	uint8_t Erase[] = {0x02, 0x11, 0x11, 0x04, 0x00, 0x11, 0x43, 0x55, 0xFF, 0xFE, 0xFF, 0xA5, 0xA5, 0x03};
+	uint8_t Erase_Response[] = {0x02, 0x11, 0x11, 0x04, 0x00, 0x11, 0x53, 0x55, 0xFF, 0xFE, 0xFF, 0x0A, 0x93, 0x03};
 	uint8_t JumpToApp[] = {0x02, 0x11, 0x11, 0x04, 0x00, 0x11, 0x43, 0x55, 0xFF, 0xFF, 0xFF, 0xA5, 0xA5, 0x03};
+	uint8_t JumpToApp_Response[] = {0x02};
+	uint8_t JumpToApp_Response_read[1];
 	uint8_t PageHeader[] = {0x02, 0x11, 0x11, 0x84, 0x00, 0x11, 0x43, 0x55, 0xFF};
 	uint8_t PageFooter[] = {0xA5, 0xA5, 0x03};
 	uint8_t PageNo[2];
 	uint8_t FwData[128];
 	uint8_t BootLoaderPage[2] = {0x02, 0x00};
 	uint8_t write_buf[128];
+#ifdef HEARTBEAT_ENABLE//current bootloader not supports heartbeatcheck
+	uint8_t HeartBeat[] = {0x02, 0x11, 0x11, 0x04, 0x00, 0x11, 0x43, 0x55, 0xFF, 0xFD, 0xFF, 0xA5, 0xA5, 0x03};
+	uint8_t HeartBeatCheck[] = {0x02, 0x11, 0x11, 0x04, 0x00, 0x11, 0x53, 0x55, 0xFF, 0xFD, 0xFF, 0x62, 0xB9, 0x03};
+#endif
+	uint8_t read_buf[14];
 	int ret = 0;
 	uint16_t i = BOOTLOADER_PAGE ;
 
 	FILE* FWDataHex = fopen("SIB.bin", "r");
 	FILE* FWDatabin = fopen("SIB.bin", "r");
 
+#ifdef HEARTBEAT_ENABLE//current bootloader not supports heartbeatcheck
+	memset(&write_buf, 0x00,sizeof(write_buf));
+	memset(&read_buf, 0x00,sizeof(read_buf));
+	memcpy(&write_buf, &HeartBeat,sizeof(HeartBeat));
+	ret = write_port(CDCACM_USB_FD, (uint8_t *)&write_buf, sizeof(HeartBeat));
+	if(!ret)
+	{
+		
+		ret = read_port_timeout(CDCACM_USB_FD, read_buf, sizeof(read_buf), 1000);
+		if(ret > 0)
+		{
+			if(memcmp(&read_buf, &HeartBeatCheck, sizeof(HeartBeatCheck)) == 0)
+			{
+				printf("We got heatbeat read value %d\n", ret);
+			}
+			else
+			{
+				printf("No head beat found DEADBEAF!!!\n");	
+				return 1;
+			}
+		}
+		else
+		{
+			printf("No head beat found DEADBEAF!!!\n");	
+			return 1;
+		}
+	}
+	usleep(1000000);
+#endif
 	if(FWDataHex == NULL)
 	{
 		printf("\nNo Firmware Upgarde File Found, DO Normal Boot");
 		usleep(1000000);
 		memset(&write_buf, 0x00,sizeof(write_buf));
 		memcpy(&write_buf, &JumpToApp,sizeof(JumpToApp));
-		printf("\n size of JumpToApp = %ld\n", sizeof(JumpToApp));
+		printf("\nsize of JumpToApp = %ld\n", sizeof(JumpToApp));
 
 		ret = write_port(CDCACM_USB_FD, (uint8_t *)&write_buf, sizeof(JumpToApp));
 		if(!ret)
 		{
-			printf("Successfully Jump to App\n");
+			ret = read_port_timeout(CDCACM_USB_FD, JumpToApp_Response_read, sizeof(JumpToApp_Response), 1000);
+			if(ret > 0)
+			{
+				if(memcmp(&JumpToApp_Response_read, &JumpToApp_Response, sizeof(JumpToApp_Response_read)) == 0)
+				{
+					printf("Successfully Jump to App\n");
+					return 0;
+				}
+				else
+				{
+					printf("Failed to Jump start, Check interface Cable");
+					return 1;
+				}
+					
+			}
+			else
+			{
+				printf("Failed to Jump start, Check interface Cable");
+				return 1;
+			}
 		}
-		
-		usleep(1000000);
-		return 0;
 	}
 
 	if(FWDatabin == NULL)
@@ -199,7 +274,28 @@ int StartFwUpgrade(void)
 	ret = write_port(CDCACM_USB_FD, (uint8_t *)&write_buf, sizeof(Erase));
 	if(!ret)
 	{
-		printf("Successfully Written Erase\n");
+		if(!ret)
+		{
+		
+			ret = read_port_timeout(CDCACM_USB_FD, read_buf, sizeof(read_buf), 1000);
+			if(ret > 0)
+			{
+				if(memcmp(&read_buf, &Erase_Response, sizeof(Erase_Response)) == 0)
+				{
+					printf("We got erase response value %d\n", ret);
+				}
+				else
+				{
+					printf("No erase response, found DEADBEAF!!!\n");	
+					return 1;
+				}
+			}
+			else
+			{
+				printf("DEADBEAF FOUND!!!\n");	
+				return 1;
+			}
+		}
 	}
 	
 	usleep(4000000);
@@ -277,10 +373,40 @@ int StartFwUpgrade(void)
 
 		}
 		usleep(100000);
+		tcflush(gUsbHostFd_t,TCIOFLUSH);
 	}
 	
 	printf("SIB Upgrade in Progress 100%% \r\n");
 	printf("\n");
+	sleep(2);
+	tcflush(gUsbHostFd_t,TCIOFLUSH);
+#ifdef HEARTBEAT_ENABLE	
+	memset(&write_buf, 0x00,sizeof(write_buf));
+	memset(&read_buf, 0x00,sizeof(read_buf));
+	memcpy(&write_buf, &HeartBeat,sizeof(HeartBeat));
+	ret = write_port(CDCACM_USB_FD, (uint8_t *)&write_buf, sizeof(HeartBeat));
+	if(!ret)
+	{
+		ret = read_port_timeout(CDCACM_USB_FD, read_buf, sizeof(read_buf), 1000);
+		if(ret > 0)
+		{
+			if(memcmp(&read_buf, &HeartBeatCheck, sizeof(HeartBeatCheck)) == 0)
+			{
+				printf("FIRMWARE UPGRADE SUCCESSFUL!!!\n");
+			}
+			else
+			{
+				printf("DEADBEAF UPGRADE FAILED !!!\n");	
+				return 1;
+			}
+		}
+		else
+		{
+			printf("DEADBEAF UPGRADE FAILED !!!\n");	
+			return 1;
+		}
+	}
+#endif
 	usleep(1000000);
 	memset(&write_buf, 0x00,sizeof(write_buf));
 	memcpy(&write_buf, &JumpToApp,sizeof(JumpToApp));
@@ -289,7 +415,26 @@ int StartFwUpgrade(void)
 	ret = write_port(CDCACM_USB_FD, (uint8_t *)&write_buf, sizeof(JumpToApp));
 	if(!ret)
 	{
-		printf("Successfully Jump to App\n");
+		ret = read_port_timeout(CDCACM_USB_FD, JumpToApp_Response_read, sizeof(JumpToApp_Response), 1000);
+		if(ret > 0)
+		{
+			if(memcmp(&JumpToApp_Response_read, &JumpToApp_Response, sizeof(JumpToApp_Response_read)) == 0)
+			{
+				printf("Successfully Jump to App\n");
+				return 0;
+			}
+			else
+			{
+				printf("Failed to Jump start, Check interface Cable");
+				return 1;
+			}
+				
+		}
+		else
+		{
+			printf("Failed to Jump start, Check interface Cable");
+			return 1;
+		}
 	}
 }
 
@@ -314,6 +459,38 @@ int write_port(int brddesc, uint8_t * buffer, size_t size)
     		return -1;
   	}
   	return 0;
+}
+
+/***************************************************************************************************
+ * Name: read_port_timeout
+ * Description:
+ * Arguments: 
+ * **************************************************************************************************/
+ssize_t read_port_timeout(int brddesc, uint8_t * buffer, size_t size, int ms_timeout)
+{
+	struct pollfd fd = { .fd = gUsbHostFd_t, .events = POLLIN };
+
+	size_t received = 0;
+	while(poll(&fd, 1, ms_timeout) == 1)
+	{
+		while(received < size)
+		{
+			ssize_t r = read(gUsbHostFd_t, buffer + received, size - received);
+    	
+			if (r < 0)
+    			{
+      				perror("failed to read from port");
+      				return -1;
+    			}
+    			if (r == 0)
+    			{
+      				// Timeout
+      				break;
+    			}
+    			received += r;
+		}
+	}
+	return received;
 }
 
 /***************************************************************************************************

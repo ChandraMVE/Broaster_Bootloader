@@ -11,6 +11,7 @@
 #include <pthread.h>
 #include <string.h>
 #include <errno.h>
+
 #include <poll.h>
 
 #include <sys/types.h>
@@ -22,12 +23,13 @@ static usb_fd gUsbHostFd_t;
 
 #define CDCACM_USB_FD  0x01
 #define USB_HOST    1 
+//#define KB_ARM_COMPILE //To enable for ARM KB build
+//#define HEARTBEAT_ENABLE  // To Enable heartbeat
 
 int cdcacm_Init(void);
 int write_port(int , uint8_t * , size_t );
-int write_port_timeout(int brddesc, uint8_t * buffer, size_t size, int ms);
-ssize_t read_port_timeout(int brddesc, uint8_t * buffer, size_t size, int ms_timeout);
 ssize_t read_port(int , uint8_t * , size_t );
+ssize_t read_port_timeout(int brddesc, uint8_t * buffer, size_t size, int ms_timeout);
 int initUSBSerial(usb_fd *, int );
 int StartFwUpgrade(void);
 
@@ -62,7 +64,7 @@ int main(void)
  * Name: bcw_RBIfInit
  * Description: Red-Black Interface Init
  * Arguments: 
- * Return: BCW_OK on success BCW_ERROR on failure
+ * Return: MVE_OK on success MVE_ERROR on failure
  * **************************************************************************************************/
 int cdcacm_Init(void)
 {
@@ -79,7 +81,7 @@ int cdcacm_Init(void)
  * Name: initUSBSerial
  * Description:
  * Arguments: 
- * Return: BCW_OK on success BCW_ERROR on failure
+ * Return: MVE_OK on success MVE_ERROR on failure
  * **************************************************************************************************/
 int initUSBSerial(usb_fd *aUsbFd, int hostordev)
 {
@@ -88,8 +90,11 @@ int initUSBSerial(usb_fd *aUsbFd, int hostordev)
   	if(hostordev == USB_HOST)
   	{
   		// Open the serial port. Change device path as needed (currently set to an standard FTDI USB-UART cable type device)
+#ifdef KB_ARM_COMPILE
+  		*aUsbFd = open("/dev/ttymxc4", O_RDWR);
+#else
   		*aUsbFd = open("/dev/ttyUSB0", O_RDWR);
-
+#endif
   	}
 
   	if(*aUsbFd > 0)
@@ -115,12 +120,12 @@ int initUSBSerial(usb_fd *aUsbFd, int hostordev)
   	tty.c_cflag &= ~CRTSCTS; // Disable RTS/CTS hardware flow control (most common)
   	tty.c_cflag |= CREAD | CLOCAL; // Turn on READ & ignore ctrl lines (CLOCAL = 1)
 
+  	tty.c_lflag &= ~ICANON;
   	//tty.c_lflag |= ICANON;
   	tty.c_lflag &= ~ECHO; // Disable echo
   	tty.c_lflag &= ~ECHOE; // Disable erasure
   	tty.c_lflag &= ~ECHONL; // Disable new-line echo
   	tty.c_lflag &= ~ISIG; // Disable interpretation of INTR, QUIT and SUSP
-	tty.c_lflag &= ~ICANON; // Set non-canonical mode
   	tty.c_iflag &= ~(IXON | IXOFF | IXANY); // Turn off s/w flow ctrl
   	tty.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL); // Disable any special handling of received bytes
 
@@ -132,10 +137,6 @@ int initUSBSerial(usb_fd *aUsbFd, int hostordev)
   	tty.c_cc[VTIME] = 10;    // Wait for up to 1s (10 deciseconds), returning as soon as any data is received.
   	tty.c_cc[VMIN] = 1;
 
-  	// Set in/out baud rate to be 9600
-//  	cfsetispeed(&tty, B9600);
-//  	cfsetospeed(&tty, B9600);
-
   	cfsetispeed(&tty, B921600);
   	cfsetospeed(&tty, B921600);
 
@@ -146,7 +147,6 @@ int initUSBSerial(usb_fd *aUsbFd, int hostordev)
       	return 1;
 	}
 
-  	//close(serial_port);
   	return 0; // success
 }
 
@@ -157,26 +157,28 @@ int initUSBSerial(usb_fd *aUsbFd, int hostordev)
 int StartFwUpgrade(void)
 {
 	uint8_t Erase[] = {0x02, 0x11, 0x11, 0x04, 0x00, 0x11, 0x43, 0x55, 0xFF, 0xFE, 0xFF, 0xA5, 0xA5, 0x03};
+	uint8_t Erase_Response[] = {0x02, 0x11, 0x11, 0x04, 0x00, 0x11, 0x53, 0x55, 0xFF, 0xFE, 0xFF, 0x0A, 0x93, 0x03};
 	uint8_t JumpToApp[] = {0x02, 0x11, 0x11, 0x04, 0x00, 0x11, 0x43, 0x55, 0xFF, 0xFF, 0xFF, 0xA5, 0xA5, 0x03};
+	uint8_t JumpToApp_Response[] = {0x02};
+	uint8_t JumpToApp_Response_read[1];
 	uint8_t PageHeader[] = {0x02, 0x11, 0x11, 0x84, 0x00, 0x11, 0x43, 0x55, 0xFF};
 	uint8_t PageFooter[] = {0xA5, 0xA5, 0x03};
 	uint8_t PageNo[2];
 	uint8_t FwData[128];
 	uint8_t BootLoaderPage[2] = {0x02, 0x00};
 	uint8_t write_buf[128];
+#ifdef HEARTBEAT_ENABLE//current bootloader not supports heartbeatcheck
 	uint8_t HeartBeat[] = {0x02, 0x11, 0x11, 0x04, 0x00, 0x11, 0x43, 0x55, 0xFF, 0xFD, 0xFF, 0xA5, 0xA5, 0x03};
 	uint8_t HeartBeatCheck[] = {0x02, 0x11, 0x11, 0x04, 0x00, 0x11, 0x53, 0x55, 0xFF, 0xFD, 0xFF, 0x62, 0xB9, 0x03};
+#endif
 	uint8_t read_buf[14];
 	int ret = 0;
 	uint16_t i = BOOTLOADER_PAGE ;
 
-	struct timeval timeout;
- 	int rv;
-	FILE* FWDataHex = fopen("Simple_FW_Upgrade.bin", "r");
-	FILE* FWDatabin = fopen("Simple_FW_Upgrade.bin", "r");
-//	FILE* FWDataHex = fopen("SIB_Communication.bin", "r");
-//	FILE* FWDatabin = fopen("SIB_Communication.bin", "r");
-	
+	FILE* FWDataHex = fopen("SIB.bin", "r");
+	FILE* FWDatabin = fopen("SIB.bin", "r");
+
+#ifdef HEARTBEAT_ENABLE//current bootloader not supports heartbeatcheck
 	memset(&write_buf, 0x00,sizeof(write_buf));
 	memset(&read_buf, 0x00,sizeof(read_buf));
 	memcpy(&write_buf, &HeartBeat,sizeof(HeartBeat));
@@ -204,11 +206,11 @@ int StartFwUpgrade(void)
 		}
 	}
 	usleep(1000000);
-
+#endif
 	if(FWDataHex == NULL)
 	{
-		memset(&write_buf, 0x00,sizeof(write_buf));
 		printf("\nNo Firmware Upgarde File Found, DO Normal Boot");
+		usleep(1000000);
 		memset(&write_buf, 0x00,sizeof(write_buf));
 		memcpy(&write_buf, &JumpToApp,sizeof(JumpToApp));
 		printf("\nsize of JumpToApp = %ld\n", sizeof(JumpToApp));
@@ -216,19 +218,36 @@ int StartFwUpgrade(void)
 		ret = write_port(CDCACM_USB_FD, (uint8_t *)&write_buf, sizeof(JumpToApp));
 		if(!ret)
 		{
-			printf("Successfully Jump to App\n");
+			ret = read_port_timeout(CDCACM_USB_FD, JumpToApp_Response_read, sizeof(JumpToApp_Response), 1000);
+			if(ret > 0)
+			{
+				if(memcmp(&JumpToApp_Response_read, &JumpToApp_Response, sizeof(JumpToApp_Response_read)) == 0)
+				{
+					printf("Successfully Jump to App\n");
+					return 0;
+				}
+				else
+				{
+					printf("Failed to Jump start, Check interface Cable");
+					return 1;
+				}
+					
+			}
+			else
+			{
+				printf("Failed to Jump start, Check interface Cable");
+				return 1;
+			}
 		}
-		
-		usleep(1000000);
-		return 0;
 	}
 
 	if(FWDatabin == NULL)
 	{
 		printf("\nOpen File Failed");
 		printf("\nNo Firmware Upgarde File Found, DO Normal Boot");
-		return 1;
+		return 0;
 	}
+
 
 	fseek(FWDataHex, 0L, SEEK_END);
 	fseek(FWDatabin, 0L, SEEK_END);
@@ -255,43 +274,60 @@ int StartFwUpgrade(void)
 	ret = write_port(CDCACM_USB_FD, (uint8_t *)&write_buf, sizeof(Erase));
 	if(!ret)
 	{
-		printf("Successfully Written Erase\n");
+		if(!ret)
+		{
+		
+			ret = read_port_timeout(CDCACM_USB_FD, read_buf, sizeof(read_buf), 1000);
+			if(ret > 0)
+			{
+				if(memcmp(&read_buf, &Erase_Response, sizeof(Erase_Response)) == 0)
+				{
+					printf("We got erase response value %d\n", ret);
+				}
+				else
+				{
+					printf("No erase response, found DEADBEAF!!!\n");	
+					return 1;
+				}
+			}
+			else
+			{
+				printf("DEADBEAF FOUND!!!\n");	
+				return 1;
+			}
+		}
 	}
 	
-	usleep(1000000);
+	usleep(4000000);
 
 	for(uint16_t i = BOOTLOADER_PAGE; i < (TotalFWDataHexPage + BOOTLOADER_PAGE); i++)
 	{
+		usleep(100000);
 		if((i-BOOTLOADER_PAGE)*100/TotalFWDataHexPage > previous_progress)
 		{
 			printf("SIB Upgrade in Progress %ld%% \r\n",(i-BOOTLOADER_PAGE)*100/TotalFWDataHexPage);
 			previous_progress = (i-BOOTLOADER_PAGE)*100/TotalFWDataHexPage;
 		}
 	
-//		usleep(100000);
 		/* Send Header*/
 		memset(&write_buf, 0x00,sizeof(write_buf));
 		memcpy(&write_buf, &PageHeader,sizeof(PageHeader));
 		ret = write_port(CDCACM_USB_FD, (uint8_t *)&write_buf, sizeof(PageHeader));
 		if(!ret)
 		{
-//			printf("Successfully Written Header\n");
+
 		}
 
 		usleep(100000);
 		/* Send Page number*/
 		PageNo[1] =  (uint8_t)((i & 0xFF00) >> 8);
 		PageNo[0] =  (uint8_t)(i & 0x00FF);
-
-//		printf("\n PageNo[0] = 0x%1x\n", PageNo[0]);
-//		printf("\n PageNo[1] = 0x%1x\n", PageNo[1]);
-//		printf("\n PageNo = 0x%2x\n", i);
 	
 		memcpy(&write_buf, &PageNo,sizeof(PageNo));
 		ret = write_port(CDCACM_USB_FD, (uint8_t *)&write_buf, sizeof(PageNo));
 		if(!ret)
 		{
-//			printf("Successfully Written Page number = %d\n", i);
+
 		}
 
 		usleep(100000);
@@ -301,14 +337,12 @@ int StartFwUpgrade(void)
 			if(OffsetFWDataHexPage != 0)
 			{	
 				memset(&write_buf, 0xFF,sizeof(write_buf));
-//				memcpy(&write_buf, FWDataHex, OffsetFWDataHexPage);
 				fread(write_buf, OffsetFWDataHexPage, 1, FWDataHex);
 			}
 			else
 			{
 				/* Send FW Data in Page order*/
 				memset(&write_buf, 0xFF,sizeof(write_buf));
-//				memcpy(&write_buf, FWDataHex, PAGE_SIZE);
 				fread(write_buf, PAGE_SIZE, 1, FWDataHex);
 			}
 				
@@ -317,7 +351,6 @@ int StartFwUpgrade(void)
 		{
 			/* Send FW Data in Page order*/
 			memset(&write_buf, 0xFF,sizeof(write_buf));
-//			printf("\n size of write_buf = %ld\n", sizeof(write_buf));
 
 			fread(write_buf, PAGE_SIZE, 1, FWDataHex);
 		}
@@ -327,7 +360,7 @@ int StartFwUpgrade(void)
 		ret = write_port(CDCACM_USB_FD, (uint8_t *)&write_buf, sizeof(write_buf));
 		if(!ret)
 		{
-//			printf("\nSuccessfully Written Page data\n");
+
 		}
 
 		usleep(100000);
@@ -337,18 +370,17 @@ int StartFwUpgrade(void)
 		ret = write_port(CDCACM_USB_FD, (uint8_t *)&write_buf, sizeof(PageFooter));
 		if(!ret)
 		{
-//			printf("Successfully Written Footer\n");
-		}
 
-		//Add delay so that MCU get enough time to ERASE
+		}
+		usleep(100000);
 		tcflush(gUsbHostFd_t,TCIOFLUSH);
 	}
 	
 	printf("SIB Upgrade in Progress 100%% \r\n");
 	printf("\n");
-	
 	sleep(2);
 	tcflush(gUsbHostFd_t,TCIOFLUSH);
+#ifdef HEARTBEAT_ENABLE	
 	memset(&write_buf, 0x00,sizeof(write_buf));
 	memset(&read_buf, 0x00,sizeof(read_buf));
 	memcpy(&write_buf, &HeartBeat,sizeof(HeartBeat));
@@ -374,6 +406,7 @@ int StartFwUpgrade(void)
 			return 1;
 		}
 	}
+#endif
 	usleep(1000000);
 	memset(&write_buf, 0x00,sizeof(write_buf));
 	memcpy(&write_buf, &JumpToApp,sizeof(JumpToApp));
@@ -382,8 +415,26 @@ int StartFwUpgrade(void)
 	ret = write_port(CDCACM_USB_FD, (uint8_t *)&write_buf, sizeof(JumpToApp));
 	if(!ret)
 	{
-		printf("Successfully Jump to App\n");
-		return 0;
+		ret = read_port_timeout(CDCACM_USB_FD, JumpToApp_Response_read, sizeof(JumpToApp_Response), 1000);
+		if(ret > 0)
+		{
+			if(memcmp(&JumpToApp_Response_read, &JumpToApp_Response, sizeof(JumpToApp_Response_read)) == 0)
+			{
+				printf("Successfully Jump to App\n");
+				return 0;
+			}
+			else
+			{
+				printf("Failed to Jump start, Check interface Cable");
+				return 1;
+			}
+				
+		}
+		else
+		{
+			printf("Failed to Jump start, Check interface Cable");
+			return 1;
+		}
 	}
 }
 
