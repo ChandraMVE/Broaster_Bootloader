@@ -33,8 +33,9 @@ else
 		echo "########## Upgrade Completed ## #####"
 		echo "#####################################"
 		rm -rf /opt/SIB.bin
+		sync
 		kill -9 $(pidof Upgrade)
-		sleep 1
+		sleep 5
 		export QT_QPA_PLATFORM=linuxfb:fb=/dev/fb0:size=1024x600:mmSize=1024x600
 		./Upgrade_complete &
 		sleep 100000000
